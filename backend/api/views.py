@@ -1,23 +1,24 @@
-from datetime import datetime
+from django.utils import timezone
 
-from api.filters import IngredientFilter, RecipeFilter
-from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
-from api.serializers import (FollowSerializer, IngredientSerializer,
-                             RecipeCreateSerializer, RecipePreviewSerializer,
-                             RecipeSerializer, SetPasswordSerializer,
-                             TagSerializer, UserSerializer)
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.models import (Favorites, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED,
                                    HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST)
+
+from .filters import IngredientFilter, RecipeFilter
+from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
+from .serializers import (FollowSerializer, IngredientSerializer,
+                          RecipeCreateSerializer, RecipePreviewSerializer,
+                          RecipeSerializer, SetPasswordSerializer,
+                          TagSerializer, UserSerializer)
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Follow, User
 
 
@@ -62,9 +63,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     )
     def favorite(self, request, id):
         if request.method == 'POST':
-            return self.add_to(Favorites, request.user, id)
+            return self.add_to(Favorite, request.user, id)
         else:
-            return self.delete_from(Favorites, request.user, id)
+            return self.delete_from(Favorite, request.user, id)
 
     @action(
         detail=False,
@@ -109,21 +110,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
         user = request.user
         if not user.shopping_cart.exists():
             return Response(status=HTTP_400_BAD_REQUEST)
-        shopping_cart = ShoppingCart.objects.filter(user=request.user)
-        recipes = [item.recipe.id for item in shopping_cart]
-        shopping_list = IngredientRecipe.objects.filter(
-            recipe__in=recipes
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__shopping_cart__user=user
         ).values(
-            'ingredient'
-        ).annotate(amount=Sum('amount'))
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(total=Sum('amount'))
 
-        today = datetime.today()
+        today = (timezone.now()).date()
         shopping_list_text = f'Список покупок({today:%d-%m-%Y}): \n'
-        for item in shopping_list:
-            ingredient = Ingredient.objects.get(pk=item['ingredient'])
-            amount = item['amount']
+        for item in ingredients:
+            name = item['ingredient__name']
+            measurement_unit = item['ingredient__measurement_unit']
+            amount = item['total']
             shopping_list_text += (
-                f'{ingredient.name}({ingredient.measurement_unit})-{amount}\n'
+                f'{name}({measurement_unit})-{amount}\n'
             )
 
         response = HttpResponse(shopping_list_text, content_type="text/plain")

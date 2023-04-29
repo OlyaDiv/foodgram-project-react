@@ -121,12 +121,17 @@ class IngredientRecipe(models.Model):
     class Meta:
         verbose_name = 'Рецепт и ингредиент'
         verbose_name_plural = 'Рецепты и ингредиенты'
+        constraints = [
+            UniqueConstraint(
+                fields=['ingredient', 'recipe'], name='unique_ingredientrecipe'
+            )
+        ]
 
     def __str__(self):
         return f'Рецепт: {self.recipe}, ингредиенты: {self.ingredient}'
 
 
-class Favorites(models.Model):
+class Favorite(models.Model):
     """Модель Избранное."""
     user = models.ForeignKey(
         User,
@@ -146,7 +151,7 @@ class Favorites(models.Model):
         verbose_name_plural = 'Избранное'
         constraints = [
             UniqueConstraint(
-                fields=['user', 'recipe'], name='unique_favorites'
+                fields=['user', 'recipe'], name='unique_favorite'
             )
         ]
 

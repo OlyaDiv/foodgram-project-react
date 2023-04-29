@@ -1,10 +1,12 @@
 from django.contrib.auth.hashers import make_password
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
-from recipes.models import (Favorites, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
+
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from users.models import Follow, User
 
 
@@ -142,19 +144,30 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'cooking_time',
         )
 
+    def validate_ingredients(self, value):
+        ingredients = []
+        for item in value:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients:
+                raise ValidationError('Ингредиенты не могут повторяться!')
+            ingredients.append(ingredient)
+        return value
+
+    def create_ingredients(self, ingredients, recipe):
+        IngredientRecipe.objects.bulk_create(
+            [IngredientRecipe(
+                recipe=recipe,
+                ingredient=get_object_or_404(Ingredient, pk=ingredient['id']),
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
+
     def create(self, validated_data):
         tags = validated_data.pop('tags')
         ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        for ingredient in ingredients:
-            amount = ingredient['amount']
-            ingredient = get_object_or_404(Ingredient, pk=ingredient['id'])
-            IngredientRecipe.objects.create(
-                recipe=recipe,
-                ingredient=ingredient,
-                amount=amount
-            )
+        self.create_ingredients(recipe=recipe, ingredients=ingredients)
         return recipe
 
     def update(self, instance, validated_data):
@@ -162,15 +175,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.tags.set(tags)
         ingredients = validated_data.pop('ingredients')
         instance.ingredients.clear()
-        for ingredient in ingredients:
-            amount = ingredient['amount']
-            ingredient = get_object_or_404(Ingredient, pk=ingredient['id'])
-            IngredientRecipe.objects.update_or_create(
-                recipe=instance,
-                ingredient=ingredient,
-                defaults={'amount': amount}
-            )
-        return super().update(instance, validated_data)
+        self.create_ingredients(recipe=instance, ingredients=ingredients)
+        instance.save()
+        return instance
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -193,19 +200,18 @@ class RecipePreviewSerializer(serializers.ModelSerializer):
 
 
 class FavoritesSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Favorites."""
+    """Сериализатор для модели Favorite."""
 
     class Meta:
-        model = Favorites
+        model = Favorite
         fields = '__all__'
-
-    validators = (
+        validators = [
             UniqueTogetherValidator(
-                queryset=Favorites.objects.all(),
+                queryset=Favorite.objects.all(),
                 fields=('user', 'recipe'),
                 message='Рецепт уже в находится в избранном'
             ),
-        )
+        ]
 
     def to_representation(self, instance):
         request = self.context.get('request')
@@ -219,14 +225,13 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShoppingCart
         fields = '__all__'
-
-    validators = (
+        validators = [
             UniqueTogetherValidator(
                 queryset=ShoppingCart.objects.all(),
                 fields=('user', 'recipe'),
                 message='Рецепт уже в находится в списке покупок'
             ),
-        )
+        ]
 
     def to_representation(self, instance):
         request = self.context.get('request')
