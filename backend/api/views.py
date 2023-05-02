@@ -1,14 +1,17 @@
-from django.utils import timezone
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import (HTTP_200_OK, HTTP_201_CREATED,
                                    HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST)
+from users.models import Follow, User
 
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAdminOrReadOnly, IsAuthorOrReadOnly
@@ -16,9 +19,6 @@ from .serializers import (FollowSerializer, IngredientSerializer,
                           RecipeCreateSerializer, RecipePreviewSerializer,
                           RecipeSerializer, SetPasswordSerializer,
                           TagSerializer, UserSerializer)
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
-from users.models import Follow, User
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -63,8 +63,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, id):
         if request.method == 'POST':
             return self.add_to(Favorite, request.user, id)
-        else:
-            return self.delete_from(Favorite, request.user, id)
+        return self.delete_from(Favorite, request.user, id)
 
     @action(
         detail=False,
@@ -77,8 +76,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def shopping_cart(self, request, id):
         if request.method == 'POST':
             return self.add_to(ShoppingCart, request.user, id)
-        else:
-            return self.delete_from(ShoppingCart, request.user, id)
+        return self.delete_from(ShoppingCart, request.user, id)
 
     def add_to(self, model, user, id):
         if model.objects.filter(user=user, recipe__id=id).exists():
