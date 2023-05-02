@@ -9,10 +9,7 @@ services:
       - ./.env
 
   backend:
-    build:
-      context: ../backend/
-      dockerfile: Dockerfile
-    restart: always
+    image: olgadiv/foodgram_backend:latest
     volumes:
       - static_backend_value:/app/static_backend/
       - media_value:/app/media/
@@ -22,9 +19,7 @@ services:
       - ./.env
 
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: olgadiv/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
