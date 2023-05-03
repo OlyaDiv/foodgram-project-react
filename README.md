@@ -9,4 +9,18 @@
 ### Технологии
 Python, Django, djangorestframework, nginx, gunicorn, docker-compose, workflow
 ### Запуск проекта
-###
+1. Клонируйте репозиторий и перейдите в него в командной строке:
+```
+git clone git@github.com:OlyaDiv/foodgram-project-react.git
+cd foodgram-project-react
+```
+2. Установите и активируйте виртуальное окружение:
+```
+python3 -m venv venv
+. venv/Scripts/activate
+```
+3. Установите зависимости
+```
+pip install -r requirements.txt
+```
+### Подготовка сервера
