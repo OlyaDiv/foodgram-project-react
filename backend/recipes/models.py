@@ -22,6 +22,7 @@ class Tag(models.Model):
     color = models.CharField(
         unique=True,
         max_length=7,
+        default='#ffff00',
         help_text='Выберите цвет'
     )
 
