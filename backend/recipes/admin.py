@@ -18,7 +18,7 @@ class RecipeAdmin(admin.ModelAdmin):
 class TagAdmin(admin.ModelAdmin):
     """Класс для работы с тегами в админ-панели."""
 
-    list_display = ('name', 'slug', 'hexcolor',)
+    list_display = ('name', 'slug', 'color',)
     search_fields = ('name',)
 
 
