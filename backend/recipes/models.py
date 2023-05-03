@@ -22,7 +22,6 @@ class Tag(models.Model):
     hexcolor = models.CharField(
         unique=True,
         max_length=7,
-        default="#ffffff",
         help_text='Выберите цвет'
     )
 
