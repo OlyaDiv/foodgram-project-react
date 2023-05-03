@@ -19,7 +19,7 @@ class Tag(models.Model):
         unique=True,
         help_text='Укажите адрес'
     )
-    hexcolor = models.CharField(
+    color = models.CharField(
         unique=True,
         max_length=7,
         help_text='Выберите цвет'
