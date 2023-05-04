@@ -238,7 +238,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(UserSerializer):
-    recipes = RecipePreviewSerializer(many=True)
+    recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
     class Meta(UserSerializer.Meta):
