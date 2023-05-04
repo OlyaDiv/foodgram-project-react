@@ -136,6 +136,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    pagination_class = PageNumberPaginationLimit
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     @action(
