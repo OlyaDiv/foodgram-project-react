@@ -144,7 +144,6 @@ class UserViewSet(viewsets.ModelViewSet):
         methods=['post', 'delete'],
         url_path=r'(?P<id>[\d]+)/subscribe',
         url_name='subscribe',
-        pagination_class=None,
         permission_classes=[IsAuthenticated]
     )
     def subscribe(self, request, **kwargs):
