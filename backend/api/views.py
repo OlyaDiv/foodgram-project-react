@@ -136,7 +136,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    pagination_class = PageNumberPaginationLimit
     http_method_names = ['get', 'post', 'put', 'patch', 'delete']
 
     @action(
@@ -144,6 +143,7 @@ class UserViewSet(viewsets.ModelViewSet):
         methods=['post', 'delete'],
         url_path=r'(?P<id>[\d]+)/subscribe',
         url_name='subscribe',
+        pagination_class=None,
         permission_classes=[IsAuthenticated]
     )
     def subscribe(self, request, **kwargs):
@@ -174,7 +174,8 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(
         methods=['get'],
         detail=False,
-        permission_classes=[IsAuthenticated]
+        permission_classes=[IsAuthenticated],
+        pagination_class=PageNumberPaginationLimit
     )
     def subscriptions(self, request):
         user = request.user
