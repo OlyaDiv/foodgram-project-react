@@ -179,12 +179,23 @@ class UserViewSet(viewsets.ModelViewSet):
         pagination_class=PageNumberPaginationLimit
     )
     def subscriptions(self, request):
-        user = request.user
+        """user = request.user
         queryset = User.objects.filter(following__user=user)
         pages = self.paginate_queryset(queryset)
         serializer = FollowSerializer(
             pages, many=True, context={'request': request}
         )
+        return self.get_paginated_response(serializer.data)"""
+        limit = self.request.query_params.get('recipes_limit')
+        pages = self.paginate_queryset(
+            User.objects.filter(following__user=self.request.user)
+        )
+        serializer = FollowSerializer(pages, many=True)
+        if limit:
+            for user in serializer.data:
+                if user.get('recipes'):
+                    user['recipes'] = user.get('recipes')[:int(limit)]
+
         return self.get_paginated_response(serializer.data)
 
     @action(
