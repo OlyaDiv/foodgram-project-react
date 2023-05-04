@@ -263,6 +263,15 @@ class FollowSerializer(UserSerializer):
             )
         return data
 
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        limit = request.query_params.get('recipes_limit')
+        queryset = obj.recipes.all()[:int(limit)]
+        serializer = RecipePreviewSerializer(
+            queryset, many=True, read_only=True
+        )
+        return serializer.data
+
 
 class SetPasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(write_only=True)
